@@ -811,7 +811,7 @@ export default function Home() {
                       </div>
 
                       {/* Input */}
-                      <div className="flex-1 relative lg:ml-4 rounded-full">
+                      <div className="flex-1 relative rounded-full">
                         <Input
                           type="text"
                           placeholder={
