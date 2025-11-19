@@ -403,6 +403,12 @@ export default function Home() {
     };
   }, [isProviderDropdownOpen]);
 
+  // Track voice mode with a ref to avoid triggering cleanup on voice mode toggle
+  const isVoiceModeRef = useRef(isVoiceMode);
+  useEffect(() => {
+    isVoiceModeRef.current = isVoiceMode;
+  }, [isVoiceMode]);
+
   // Cleanup browser when tab closes
   useEffect(() => {
     const handleBeforeUnload = () => {
@@ -411,14 +417,14 @@ export default function Home() {
       
       try {
         // Stop voice pipeline if voice mode is active
-        if (isVoiceMode) {
+        if (isVoiceModeRef.current) {
           navigator.sendBeacon("/api/stop-voice", blob);
         }
         // Reset browser to blank page
         navigator.sendBeacon("/api/reset-browser", blob);
       } catch (e) {
         // Fallback if sendBeacon fails
-        if (isVoiceMode) {
+        if (isVoiceModeRef.current) {
           fetch("/api/stop-voice", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -439,8 +445,8 @@ export default function Home() {
     
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
-      // Also stop voice and reset browser on component unmount
-      if (isVoiceMode) {
+      // Also stop voice and reset browser on component unmount (tab close)
+      if (isVoiceModeRef.current) {
         fetch("/api/stop-voice", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -455,7 +461,7 @@ export default function Home() {
         keepalive: true,
       }).catch(() => {});
     };
-  }, [isVoiceMode]);
+  }, []); // Empty dependency array - only run on mount/unmount
 
   const handleStopVoiceMode = () => {
     // Stop all audio
